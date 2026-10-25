@@ -31,13 +31,36 @@ Your solution must:
 - Generate one prediction row for every request in `dataset/deletion_requests.csv`
 - Write the final predictions to `output.csv` in the repository root
 
-Run the starter Python entry point with:
+The implementation is deterministic Python and reads participant-facing files under `dataset/`.
+It uses `pypdf` to extract searchable text from PDF evidence. From the repository root, install
+the declared dependency and generate the submission:
 
-```bash
-python3 code/main.py
+```powershell
+python -m pip install -r code\requirements.txt
+python code\main.py
 ```
 
 The blank template at `dataset/output.csv` is provided as a reference. Your final generated file for submission must be the root-level `output.csv`.
+
+## Validation and evaluation
+
+Run the independent regression tests, output validator, and public sample comparison:
+
+```powershell
+python -m unittest discover -s code\evaluation -v
+python code\evaluation\main.py validate
+python code\evaluation\main.py compare
+```
+
+After regenerating `output.csv` and running the tests, refresh both measured evaluation reports:
+
+```powershell
+python code\evaluation\main.py report
+```
+
+`validate` returns a non-zero exit code when the output contract or evidence-reference checks fail.
+`compare` runs the predictor on the 32 public sample requests in memory against
+`dataset/sample_output.csv`; it does not copy sample answers into production output.
 
 
 ## Dataset
@@ -126,7 +149,8 @@ This repository includes [`AGENTS.md`](./AGENTS.md), which instructs compatible 
 
 You may use any programming language, model, framework, or retrieval approach. Include clear setup and execution instructions in `README.md` inside `code.zip`.
 
-To package `code.zip` from the repository root without bundling the dataset:
+To package `code.zip` from the repository root without bundling the dataset, secrets, caches, or
+nested archives:
 
 **macOS / Linux:**
 
@@ -139,6 +163,10 @@ zip -r code.zip README.md code -x "*/__pycache__/*" "*/.venv/*" "*/venv/*" "*/no
 ```powershell
 Compress-Archive -Path README.md, code -DestinationPath code.zip -Force
 ```
+
+Before using `Compress-Archive`, remove any `__pycache__` folders under `code`; inspect the archive
+after creation to confirm that it contains `README.md`, the implementation, evaluation suite and
+reports, and `code/requirements.txt`, but no dataset, environment, cache, or nested archive.
 
 When packaging `code.zip`:
 
